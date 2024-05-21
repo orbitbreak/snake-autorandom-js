@@ -30,11 +30,22 @@ canvas {
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 
-var canvasSideLength = 400;
-var canvasSideTiles = 10;
-var startOffset = 4;
-var grid = canvasSideLength/canvasSideTiles; // must be round number
-var gameSpeedCounter = 0;
+const canvasSideLength = 400;
+const canvasSideTiles = 10;
+const startOffset = 4;
+const grid = canvasSideLength/canvasSideTiles; // must be round number
+var   gameSpeedCounter = 0;
+
+// uses prevMove and nextTurnOrStraight to decide next move
+// Move schema: 1=west,2=north,3=east,4=south
+// Turn schema: 1=left,2=straight,3=right
+// 2D matrix, x=Move, y=Turn //INDEX BY -1 FROM SCHEMA in calc func
+//
+//             x+1=1  2  3  4
+//   compass move  W  N  E  S  
+pickNextMove = [ [ 4, 1, 2, 3 ], //y+1=1=left turn
+                 [ 1, 2, 3, 4 ],     //2=straight
+                 [ 2, 3, 4, 1 ], ] ; //3=right turn
 
 var snake = {
     x: grid * startOffset, //starting pos
@@ -44,6 +55,7 @@ var snake = {
     dy: 0,
     
     cells: [], //all squares of snakes body, accumulates infinitely
+
     handleNextMove: function(nextMoveInt){
         console.log("handleNextMove:: handling nextMoveInt=" + nextMoveInt);
         switch(nextMoveInt){
@@ -63,6 +75,7 @@ var snake = {
                 console.error("in handleNextMove:: unhandled nextMoveInt=" + nextMoveInt);
         }
     },
+
     detectPrevMove: function(headCell, neckCell){
         let prevMove = 0;
         if (headCell.x > neckCell.x){
@@ -81,54 +94,6 @@ var snake = {
         console.log("detectPrevMove:: returning prevMove=" + prevMove);
         return prevMove;
     },
-    pickNextMove: function(turnLeftStraightRight, prevMove){
-        let nextMove = 0;
-        switch(turnLeftStraightRight){
-            case 1: //turn left
-                switch(prevMove){
-                    case 1: //last moved west
-                        nextMove = 4; break; //go south
-                    case 2: //last moved north
-                        nextMove = 1; break; //go west
-                    case 3: //last moved east
-                        nextMove = 2; break; //go north
-                    case 4: //last moved south
-                        nextMove = 3; break; //go east
-                    default:
-                        console.error("Unhandled prevMove=" + prevMove);
-                }; break;
-            case 2: //straight 
-                switch(prevMove){
-                    case 1: //last moved west
-                        nextMove = 1; break; //go west
-                    case 2: //last moved north
-                        nextMove = 2; break; //go north
-                    case 3: //last moved east
-                        nextMove = 3; break; //go east
-                    case 4: //last moved south
-                        nextMove = 4; break; //go south
-                    default:
-                        console.error("Unhandled prevMove=" + prevMove);
-                }; break;
-            case 3: //turn right
-                switch(prevMove){
-                    case 1: //last moved west
-                        nextMove = 2; break; //go north
-                    case 2: //last moved north
-                        nextMove = 3; break; //go east
-                    case 3: //last moved east
-                        nextMove = 4; break; //go south
-                    case 4: //last moved south
-                        nextMove = 1; break; //go west
-                    default:
-                        console.error("Unhandled prevMove=" + prevMove);
-                }; break;
-            default:
-                console.error("Unhandled turnLeftStraightRight=" + turnLeftStraightRight);
-        }
-        console.log("pickNextMove:: returning nextMove=" + nextMove);
-        return nextMove;
-    },
 };
 
 //main
@@ -143,8 +108,8 @@ function loop() {
     
     // Random pick next direction move: int 1-3
     // 1=left turn, 2=straight, 3=right turn
-    let turnLeftStraightRight = Math.round((Math.random() * (3-1) + 1));
-    console.log("turnLeftStraightRight=" + turnLeftStraightRight);
+    let nextTurnOrStraight = Math.round((Math.random() * (3-1) + 1));
+    console.log("nextTurnOrStraight=" + nextTurnOrStraight);
     
     // check head/neck to know last move, no doubling back on neck 
     if (snake.cells.length > 1){
@@ -155,9 +120,12 @@ function loop() {
         
         let prevMove,nextMove = 0 //1=west, 2=north, 3=east, 4=south
         prevMove = snake.detectPrevMove(headCell, neckCell);
-        nextMove = snake.pickNextMove(turnLeftStraightRight, prevMove);
-        
+
+        console.log("Attempting check of pickNextMove matrix, with nextTurnOrStraight=" + 
+                        nextTurnOrStraight + ", prevMove=" + prevMove);
+        nextMove = pickNextMove[nextTurnOrStraight-1][prevMove-1]; //move+turn schemas are 1-indexed
         console.log("nextMove=" + nextMove);
+
         snake.handleNextMove(nextMove);
     }
     
@@ -168,7 +136,7 @@ function loop() {
     // accumulate infinite snake body
     snake.cells.unshift({x: snake.x, y: snake.y});
 
-    let resetGame = false;
+    let resetGame = false; //make global var if keypress handling
     
     if (snake.x >= canvasSideLength || 
             snake.y >= canvasSideLength || 
@@ -184,11 +152,10 @@ function loop() {
     context.fillStyle = 'green';
     snake.cells.forEach(function(cell, index) {
         context.fillRect(cell.x, cell.y, grid-5, grid-5); // draw in snake body, with border grid effect
-        
-        for (var i = index + 1; i < snake.cells.length; i++) { // check collision
-            if (i===1){
-                console.log("PROCESSING HEAD CELL, DRAW LASTMOVE INDICATOR???"); //TODO
-            }
+        if (index===0){
+            console.log("PROCESSING HEAD CELL, DRAW LASTMOVE INDICATOR??? from index"); //TODO
+        }
+        for (let i = index + 1; i < snake.cells.length; i++) { // check collision
             if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) { // collision, snake in body. reset
                 console.log("Self-collision detected!! for cells index=" + i + ", with x,y=" 
                     + cell.x + "," + cell.y );
@@ -209,16 +176,10 @@ function loop() {
     }
 }
 
-//// keypress handling
-//document.addEventListener('keydown', function(e) {
-//  if (e.which === 37) { //left arrow
-//    //do something
-//  }
-//});
+requestAnimationFrame(loop); //start game
 
-// start the game
-requestAnimationFrame(loop);
-
+//// TODO keypress handling?
+//document.addEventListener('keydown', function(e) { if (e.which === 37) { //left arrow }});
 </script>
 </body>
 </html>
