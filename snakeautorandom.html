@@ -126,7 +126,7 @@ function loop() {
         nextMove = pickNextMove[nextTurnOrStraight-1][prevMove-1]; //move+turn schemas are 1-indexed
         console.log("nextMove=" + nextMove);
 
-        snake.handleNextMove(nextMove);
+        snake.handleNextMove(nextMove); //TODO for move-redo (try-again) logic, rollback to before this line after seeing resetGame=True
     }
     
     // move snake by new velocity (either left-turn, straight, or right-turn)
@@ -165,6 +165,7 @@ function loop() {
         }
     });
 
+    //TODO for move retry (collision redo), if resetGame=true here, rollback to before snake.handleNextMove call
     if (resetGame){
         console.log("resetGame=true, resetting");
         snake.x = grid * startOffset;
