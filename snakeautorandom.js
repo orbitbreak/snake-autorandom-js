@@ -1,31 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Snake AutoRandom</title>
-<meta charset="UTF-8">
-<style>
-html, body {
-    height: 100%;
-    margin: 0;
-}
-
-body {
-    background: black;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-canvas {
-    border: 1px solid blue;
-}
-</style>
-</head>
-<body>
-
-<!-- size must match canvasSideLength in script below -->
-<canvas width="400" height="400" id="canvas"></canvas> 
-
-<script>
+//snakeautorandom.js
+//Snake game simulation in javascript/canvas. Automatic randomized movement, resets on collision with self or border.
+//Uses html canvas element with: id="canvas" width="400" height="400"
 
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
@@ -181,7 +156,3 @@ requestAnimationFrame(loop); //start game
 
 //// TODO keypress handling?
 //document.addEventListener('keydown', function(e) { if (e.which === 37) { //left arrow }});
-</script>
-</body>
-</html>
-
