@@ -127,8 +127,13 @@ function loop() {
     context.fillStyle = 'green';
     snake.cells.forEach(function(cell, index) {
         context.fillRect(cell.x, cell.y, grid-5, grid-5); // draw in snake body, with border grid effect
-        if (index===0){
-            console.log("PROCESSING HEAD CELL, DRAW LASTMOVE INDICATOR??? from index"); //TODO
+        if (index===0){ //cell is head of snake, draw snake face
+			//context.font="10px Arial";
+			context.font=(grid/3).toString() + "px Arial";
+            context.fillStyle = 'red'; //only for text
+			context.fillText("@_@", cell.x+grid/6, cell.y+grid/2); //draw snake face
+            context.fillStyle = 'green'; //revert for other body cells
+
         }
         for (let i = index + 1; i < snake.cells.length; i++) { // check collision
             if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) { // collision, snake in body. reset
